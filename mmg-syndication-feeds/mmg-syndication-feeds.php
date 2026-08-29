@@ -3,7 +3,7 @@
  * Plugin Name: MMG Syndication Feeds
  * Plugin URI:  https://mainlinemediagroup.com
  * Description: Generates platform-compliant RSS feeds for Yahoo News and MSN syndication. Supports category/tag filters and multiple tag-based sub-feeds per platform. v2: Scoreline Feeds engine (sanitizer, validation gates, rendition ladder, skip log) with the original feed URLs and shape preserved.
- * Version:     2.1.0
+ * Version:     2.1.1
  * Author:      Mainline Media Group
  * Update URI:  https://github.com/mainlinemedia/mmg-syndication-feeds
  * Author URI:  https://mainlinemediagroup.com
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MMGSF_VERSION', '2.1.0' );
+define( 'MMGSF_VERSION', '2.1.1' );
 const MMGSF_MODIFIED_JITTER = 60; // modified must exceed published by this before an update element is emitted
 
 require_once __DIR__ . '/includes/emitter.php';

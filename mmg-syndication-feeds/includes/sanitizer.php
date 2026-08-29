@@ -96,6 +96,17 @@ function mmgsf_sanitize( $html, $rules ) {
             continue;
         }
 
+        // Yahoo and MSN both require HTTPS embed sources — upgrade http://
+        // and protocol-relative src attributes in place.
+        if ( ( $tag === 'iframe' || $tag === 'embed' ) && $el->hasAttribute( 'src' ) ) {
+            $esrc = $el->getAttribute( 'src' );
+            if ( stripos( $esrc, 'http://' ) === 0 ) {
+                $el->setAttribute( 'src', 'https://' . substr( $esrc, 7 ) );
+            } elseif ( substr( $esrc, 0, 2 ) === '//' ) {
+                $el->setAttribute( 'src', 'https:' . $esrc );
+            }
+        }
+
         if ( $tag === 'iframe' ) {
             $src  = $el->getAttribute( 'src' );
             $host = strtolower( (string) parse_url( $src, PHP_URL_HOST ) );
