@@ -3,7 +3,7 @@
  * Plugin Name: MMG Syndication Feeds
  * Plugin URI:  https://mainlinemediagroup.com
  * Description: Generates platform-compliant RSS feeds for Yahoo News and MSN syndication. Supports category/tag filters and multiple tag-based sub-feeds per platform. v2: Scoreline Feeds engine (sanitizer, validation gates, rendition ladder, skip log) with the original feed URLs and shape preserved.
- * Version:     2.1.1
+ * Version:     2.1.2
  * Author:      Mainline Media Group
  * Update URI:  https://github.com/mainlinemedia/mmg-syndication-feeds
  * Author URI:  https://mainlinemediagroup.com
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MMGSF_VERSION', '2.1.1' );
+define( 'MMGSF_VERSION', '2.1.2' );
 const MMGSF_MODIFIED_JITTER = 60; // modified must exceed published by this before an update element is emitted
 
 require_once __DIR__ . '/includes/emitter.php';
@@ -251,6 +251,7 @@ function mmgsf_sanitize_options( $input ) {
     $clean['affiliate_domains'] = sanitize_text_field( $input['affiliate_domains'] ?? $defaults['affiliate_domains'] );
     $clean['affiliate_paths']   = sanitize_text_field( $input['affiliate_paths']   ?? $defaults['affiliate_paths'] );
     set_transient( 'mmgsf_flush_rewrites', 1, 30 );
+    mmgsf_touch_config();
     return $clean;
 }
 
@@ -665,7 +666,7 @@ function mmgsf_affiliate_lists( $opts ) {
  * publish busts it instantly (Yahoo polls every ~5 minutes).
  */
 function mmgsf_cached_feed( $kind, $opts, $filters, $renderer ) {
-    $key    = 'mmgsf_feed_' . md5( $kind . '|' . wp_json_encode( $filters ) . '|' . get_lastpostmodified( 'GMT' ) . '|' . MMGSF_VERSION );
+    $key    = 'mmgsf_feed_' . md5( $kind . '|' . wp_json_encode( $filters ) . '|' . mmgsf_feed_lastmod() . '|' . MMGSF_VERSION );
     $cached = get_transient( $key );
     if ( $cached !== false ) {
         return $cached;
@@ -727,7 +728,7 @@ function mmgsf_no_cache_headers() {
 
 /** Shared conditional-GET handling. Returns true when a 304 was served. */
 function mmgsf_maybe_304() {
-    $lastmod = strtotime( get_lastpostmodified( 'GMT' ) . ' UTC' );
+    $lastmod = mmgsf_feed_lastmod();
     if ( ! $lastmod ) {
         return false;
     }

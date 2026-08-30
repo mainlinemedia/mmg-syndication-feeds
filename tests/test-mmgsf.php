@@ -289,6 +289,15 @@ t( 'r2: updater offers newer github release, refuses foreign package hosts', fun
     expect_false( is_array( mmgsf_github_update_check( false, [], 'mmg-syndication-feeds/mmg-syndication-feeds.php' ) ) );
 } );
 
+t( 'r3: settings save busts the cache without a new publish', function() {
+    $id = sf_post();
+    $first = sf_yahoo_xml();
+    $GLOBALS['mmgrf_test']['posts'][ $id ]->post_title = 'Config Bust Visible Now Definitely';
+    expect_eq( sf_yahoo_xml(), $first, 'cached' );
+    $GLOBALS['mmgrf_test']['options']['mmgsf_config_touched'] = mmgsf_feed_lastmod() + 100;
+    expect_contains( sf_yahoo_xml(), 'Config Bust Visible Now', 'config touch rotates the key' );
+} );
+
 // ── Cache ────────────────────────────────────────────────────────
 
 t( 'cache: 60s transient serves repeat requests; publish busts it', function() {

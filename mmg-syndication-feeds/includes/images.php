@@ -139,6 +139,17 @@ function mmgsf_url_to_attachment( $url ) {
     return $memo[ $url ];
 }
 
+/** Latest publish OR latest settings save — a config change with no new post
+ *  must still bust caches and defeat 304s. */
+function mmgsf_feed_lastmod() {
+    $posts = strtotime( get_lastpostmodified( 'GMT' ) . ' UTC' ) ?: 0;
+    return max( $posts, (int) get_option( 'mmgsf_config_touched', 0 ) );
+}
+
+function mmgsf_touch_config() {
+    update_option( 'mmgsf_config_touched', time(), 'no' );
+}
+
 /** Conditional-GET decision — 304 when the client is already current. */
 function mmgsf_feed_not_modified( $if_modified_since, $lastmod_ts ) {
     if ( ! is_string( $if_modified_since ) || trim( $if_modified_since ) === '' ) {
