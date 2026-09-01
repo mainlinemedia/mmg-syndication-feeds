@@ -3,7 +3,7 @@
  * Plugin Name: MMG Syndication Feeds
  * Plugin URI:  https://mainlinemediagroup.com
  * Description: Generates platform-compliant RSS feeds for Yahoo News and MSN syndication. Supports category/tag filters and multiple tag-based sub-feeds per platform. v2: Scoreline Feeds engine (sanitizer, validation gates, rendition ladder, skip log) with the original feed URLs and shape preserved.
- * Version:     2.1.2
+ * Version:     2.1.3
  * Author:      Mainline Media Group
  * Update URI:  https://github.com/mainlinemedia/mmg-syndication-feeds
  * Author URI:  https://mainlinemediagroup.com
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MMGSF_VERSION', '2.1.2' );
+define( 'MMGSF_VERSION', '2.1.3' );
 const MMGSF_MODIFIED_JITTER = 60; // modified must exceed published by this before an update element is emitted
 
 require_once __DIR__ . '/includes/emitter.php';
@@ -880,7 +880,11 @@ function mmgsf_render_yahoo( $opts, $filters ) {
             $xml .= '      ' . mmgsf_el( 'description', $desc_plain, [], true ) . "\n";
             $xml .= '      ' . mmgsf_el( 'content:encoded', $body, [], true ) . "\n";
             $xml .= '      ' . mmgsf_el( 'category', mmgsf_plain( $yahoo_cat ) ) . "\n";
-            if ( $img ) {
+            // Media elements are STRICTLY a fallback for imageless bodies.
+            // Emitting them beside the inline lead figure made Yahoo flag
+            // every item "Duplicate photos" (observed live on easysportz,
+            // 2026-09-01) — the same photo declared twice.
+            if ( $img && stripos( $body, '<img' ) === false ) {
                 $xml .= '      <media:thumbnail url="' . mmgsf_xml( $img['url'] ) . '" height="' . (int) $img['height'] . '" width="' . (int) $img['width'] . '"/>' . "\n";
                 $xml .= '      <media:content url="' . mmgsf_xml( $img['url'] ) . '" type="' . mmgsf_xml( $img['type'] ) . '" medium="image" width="' . (int) $img['width'] . '" height="' . (int) $img['height'] . '">' . "\n";
                 $credit = $img['caption'] !== '' ? $img['caption'] : $img['alt'];

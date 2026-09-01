@@ -51,7 +51,10 @@ t( 'contract: yahoo item element order preserved', function() {
     sf_post();
     $xml = sf_yahoo_xml();
     $pos = 0;
-    foreach ( [ '<item>', '<title><![CDATA[', '<link>', '<pubDate>', '<guid isPermaLink="true">', '<dc:creator>', '<description><![CDATA[', '<content:encoded><![CDATA[', '<category>', '<media:thumbnail', '</item>' ] as $needle ) {
+    // media:thumbnail removed from the contract 2026-09-01: Yahoo's portal
+    // flags figure + media pair as Duplicate photos ("each image URL listed
+    // only once") — the inline figure is the single declaration now.
+    foreach ( [ '<item>', '<title><![CDATA[', '<link>', '<pubDate>', '<guid isPermaLink="true">', '<dc:creator>', '<description><![CDATA[', '<content:encoded><![CDATA[', '<category>', '</item>' ] as $needle ) {
         $found = strpos( $xml, $needle, $pos );
         expect_true( $found !== false, "in order: $needle" );
         $pos = $found;
@@ -78,13 +81,15 @@ t( 'channel: empty tagline falls back to site name', function() {
 
 // ── Image upgrade (the systemic live defect: 30/30 at 1024px) ────
 
-t( 'yahoo: lead image and thumbnail use the full 2560 rendition, not large', function() {
+t( 'yahoo: lead figure uses the full 2560 rendition; no duplicate media declaration', function() {
     $id = sf_post();
     $xml = sf_yahoo_xml();
     expect_contains( $xml, "wire$id-scaled.jpg", 'full rendition used' );
     expect_not_contains( $xml, '1024x683.jpg' );
-    expect_contains( $xml, 'width="2560"' );
-    expect_contains( $xml, '<media:content', 'media:content with dimensions added' );
+    expect_match( $xml, '/<figure><img src="[^"]*wire' . $id . '-scaled\.jpg"/' );
+    // Yahoo flags inline figure + declared media tag as Duplicate photos.
+    expect_not_contains( $xml, '<media:content' );
+    expect_not_contains( $xml, '<media:thumbnail' );
 } );
 
 t( 'yahoo: sub-floor-only original drops the image, ships the item, logs warn', function() {
