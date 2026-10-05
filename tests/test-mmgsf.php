@@ -189,6 +189,14 @@ t( 'entities: stored &#8217; decoded to real characters inside CDATA', function(
 
 // ── MSN ──────────────────────────────────────────────────────────
 
+t( 'audit4-C: msn media object is nested (no sibling same-URL thumbnail/content pair)', function() {
+    sf_post();
+    $xml = sf_msn_xml();
+    expect_match( $xml, '/<media:content[^>]+>\s*<media:thumbnail/', 'thumbnail nested inside content' );
+    // No sibling pair: the thumbnail never appears OUTSIDE a media:content block.
+    expect_false( (bool) preg_match( '/<\/media:content>\s*<media:thumbnail|<media:thumbnail[^>]*\/>\s*<media:content/', $xml ), 'no same-URL sibling listing' );
+} );
+
 t( 'msn: youtube iframe stripped, tiktok kept; short title only when needed', function() {
     sf_post( [ 'post_content' => '<p>' . implode( ' ', array_fill( 0, 40, 'w' ) ) . '</p><iframe src="https://www.youtube.com/embed/x"></iframe><iframe src="https://www.tiktok.com/embed/v2/1"></iframe>' ] );
     $xml = sf_msn_xml();

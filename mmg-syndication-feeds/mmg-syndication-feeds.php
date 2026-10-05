@@ -3,7 +3,7 @@
  * Plugin Name: MMG Syndication Feeds
  * Plugin URI:  https://mainlinemediagroup.com
  * Description: Generates platform-compliant RSS feeds for Yahoo News and MSN syndication. Supports category/tag filters and multiple tag-based sub-feeds per platform. v2: Scoreline Feeds engine (sanitizer, validation gates, rendition ladder, skip log) with the original feed URLs and shape preserved.
- * Version:     2.1.3
+ * Version:     2.1.4
  * Author:      Mainline Media Group
  * Update URI:  https://github.com/mainlinemedia/mmg-syndication-feeds
  * Author URI:  https://mainlinemediagroup.com
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MMGSF_VERSION', '2.1.3' );
+define( 'MMGSF_VERSION', '2.1.4' );
 const MMGSF_MODIFIED_JITTER = 60; // modified must exceed published by this before an update element is emitted
 
 require_once __DIR__ . '/includes/emitter.php';
@@ -1029,14 +1029,15 @@ function mmgsf_render_msn( $opts, $filters ) {
             if ( $keywords ) {
                 $xml .= '      ' . mmgsf_el( 'media:keywords', implode( ', ', $keywords ) ) . "\n";
             }
-            $xml .= '      <media:thumbnail url="' . mmgsf_xml( $img['url'] ) . '" width="' . (int) $img['width'] . '" height="' . (int) $img['height'] . '"/>' . "\n";
+            // One nested media object (thumbnail inside content) — never a
+            // sibling pair listing the same URL twice (audit4-C; matches the
+            // Scoreline MSN shape that audits clean in Partner Hub).
+            $xml .= '      <media:content url="' . mmgsf_xml( $img['url'] ) . '" type="' . mmgsf_xml( $img['type'] ) . '" medium="image" width="' . (int) $img['width'] . '" height="' . (int) $img['height'] . '">' . "\n";
+            $xml .= '        <media:thumbnail url="' . mmgsf_xml( $img['url'] ) . '"/>' . "\n";
             if ( $img_desc !== '' ) {
-                $xml .= '      <media:content url="' . mmgsf_xml( $img['url'] ) . '" type="' . mmgsf_xml( $img['type'] ) . '" medium="image" width="' . (int) $img['width'] . '" height="' . (int) $img['height'] . '">' . "\n";
                 $xml .= '        <media:description type="plain">' . mmgsf_cdata( mmgsf_plain( $img_desc ) ) . "</media:description>\n";
-                $xml .= "      </media:content>\n";
-            } else {
-                $xml .= '      <media:content url="' . mmgsf_xml( $img['url'] ) . '" type="' . mmgsf_xml( $img['type'] ) . '" medium="image" width="' . (int) $img['width'] . '" height="' . (int) $img['height'] . '"/>' . "\n";
             }
+            $xml .= "      </media:content>\n";
             $xml .= "    </item>\n";
         }
         wp_reset_postdata();
